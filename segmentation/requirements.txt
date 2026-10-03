@@ -1,0 +1,8 @@
+# Versions the segmentation scripts were tested with (Python 3.13)
+av==19.0.1
+filterpy==1.4.5
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+scipy==1.18.1
+sort-tracker-py==1.0.2
+tqdm==4.70.1

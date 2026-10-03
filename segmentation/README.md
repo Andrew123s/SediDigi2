@@ -19,7 +19,16 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+On Windows, activate with `.venv\Scripts\activate` instead.
+
 ### Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+`requirements.txt` pins the versions the scripts were tested with. Installing the
+latest versions also works:
 
 ```bash
 pip install numpy scipy filterpy sort-tracker-py av opencv-python-headless tqdm
