@@ -16,6 +16,7 @@ from sort.sort import *
 import av
 import cv2
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
@@ -35,11 +36,34 @@ def open_video(path):
     for opts in try_hwaccel:
         try:
             return av.open(path, mode="r", options=opts)
-        except av.AVError:
+        except av.error.FFmpegError:  # av.AVError no longer exists in PyAV >= 14
             continue
 
     # Fallback: software decode (always works)
     return av.open(path)
+
+
+def match_tracks_to_detections(tracks, detections, min_iou=0.3):
+    """
+    Pair SORT output rows with the detections of the current frame.
+
+    Returns (track_index, detection_index) pairs, matched one-to-one by
+    maximum IoU. Pairs below min_iou are dropped.
+    """
+    if len(tracks) == 0 or len(detections) == 0:
+        return []
+
+    t = np.asarray(tracks[:, :4], dtype=float)[:, None, :]
+    d = np.asarray(detections[:, :4], dtype=float)[None, :, :]
+    iw = np.clip(np.minimum(t[..., 2], d[..., 2]) - np.maximum(t[..., 0], d[..., 0]), 0, None)
+    ih = np.clip(np.minimum(t[..., 3], d[..., 3]) - np.maximum(t[..., 1], d[..., 1]), 0, None)
+    inter = iw * ih
+    area_t = (t[..., 2] - t[..., 0]) * (t[..., 3] - t[..., 1])
+    area_d = (d[..., 2] - d[..., 0]) * (d[..., 3] - d[..., 1])
+    iou = inter / (area_t + area_d - inter + 1e-9)
+
+    rows, cols = linear_sum_assignment(-iou)
+    return [(r, c) for r, c in zip(rows, cols) if iou[r, c] >= min_iou]
 
 
 def extract_obj(args):
@@ -72,7 +96,7 @@ def extract_obj(args):
     # --- Setup capture (AV) ---
     container = open_video(video_path)
     stream = container.streams.video[0]
-    fps = int(stream.average_rate)
+    fps = int(float(stream.average_rate))  # average_rate is an AVRational in PyAV >= 14
 
     if args.low_fps:
         fps = int(fps/2)
@@ -251,8 +275,10 @@ def extract_obj(args):
         else:
             detections = np.array(detections)
             track_bbs_ids = mot_tracker.update(detections)
-            for i in range(0, len(track_bbs_ids)):
-                detect = track_bbs_ids[i]
+            # SORT does not return tracks in detection order (and may return fewer),
+            # so map each track back to the detection it was built from.
+            for t, i in match_tracks_to_detections(track_bbs_ids, detections):
+                detect = track_bbs_ids[t]
                 obj_id = int(detect[4])
                 if obj_id in tracked_objects:
                     tracked_objects[obj_id].append({'crop': crops[i], 'mask': masks[i], 'masked_crop' : masked_crop[i], 'name': names[i]})
@@ -278,8 +304,9 @@ def extract_obj(args):
             if packet:
                 out_cont.mux(packet)
 
-        container.close()
+    container.close()
     if args.drawing:
+        out_cont.mux(o_stream.encode())  # flush frames still buffered in the encoder
         out_cont.close()
 
     print("Writing crop")
