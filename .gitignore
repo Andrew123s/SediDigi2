@@ -1,0 +1,74 @@
+*(copy)*
+oc_*
+done*
+obsolete/
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.egg-info/
+dist/
+##build/
+*.egg
+.eggs/
+bin/
+.bin/
+venv/
+.venv/
+env/
+*.so
+__init*
+!segmentation/sort/__init__.py
+
+# C/C++
+*.o
+*.obj
+*.so
+*.a
+*.dylib
+*.dll
+*.lib
+*.exe
+*.out
+*.bin
+*.dSYM/
+*.dSYM
+*.su
+*.idb
+*.pdb
+*.sdf
+*.ilk
+*.iobj
+*.ipch
+*.pch
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.cmake
+##build/
+Debug/
+Release/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Office
+*.odt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Video recordings
+*.avi
+*.mkv
+*.mov
+*.mp4

@@ -1,0 +1,7 @@
+# pip packages
+numpy==1.21.5
+opencv-python==4.8.1
+
+# System packages (apt):
+#   sudo apt install python3-gi gir1.2-gstreamer-1.0 \
+#     gir1.2-gst-plugins-base-1.0 gir1.2-gst-app-1.0

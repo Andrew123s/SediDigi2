@@ -1,0 +1,34 @@
+{
+  "predefined": [
+    {
+      "name": "Blue 1",
+      "hex": "0062ac"
+    },
+    {
+      "name": "Blue 2",
+      "hex": "17388c"
+    },
+    {
+      "name": "Blue 3",
+      "hex": "0083c9"
+    },
+    {
+      "name": "Blue 4",
+      "hex": "0079ba"
+    },
+    {
+      "name": "Blue 5",
+      "hex": "0063ac"
+    },
+    {
+      "name": "Blue 6",
+      "hex": "006bb5"
+    },
+    {
+      "name": "Blue 7",
+      "hex": "00599f"
+    }
+  ],
+  "custom": [],
+  "brightness": 14
+}

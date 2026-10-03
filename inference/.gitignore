@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+
+# modelling artifacts (downloads and builds)
+*.pt
+*.onnx
+*.engine
+
+# builds/PyCUDA 
+*.whl
+build/

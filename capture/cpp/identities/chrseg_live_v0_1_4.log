@@ -1,0 +1,47 @@
+Pipeline string:
+nvarguscamerasrc sensor-id=0 exposuretimerange="2500000 2500000" awblock=true aelock=true tnr-mode=1 tnr-strength=0.1 ee-mode=0 saturation=1 ! video/x-raw(memory:NVMM),width=4032,height=3040,framerate=21/1,format=NV12 ! nvvidconv bl-output=false ! video/x-raw,format=NV12,width=4032,height=3040,framerate=21/1 ! identity name=proc ! nvvidconv ! video/x-raw(memory:NVMM),width=1280,height=960 ! nvegltransform ! nveglglessink sync=false
+
+GST_ARGUS: NvArgusCameraSrc: Setting Exposure Time Range : 2500000 2500000
+Chromatic segmentation live preview (version 0.1.4)
+GPU processing: 4032x3040 (full camera resolution)
+Display: 1280x960 (4:3)
+Sensor ID: 0
+Framerate: 21/1
+TNR mode: 1
+TNR strength: 0.1
+EE mode: 0
+Exposure time: 2500000 ns
+Delta: 10%
+Benchmarking enabled
+Press ENTER or close the window to stop.
+
+Using winsys: x11 
+GST_ARGUS: Creating output stream
+CONSUMER: Waiting until producer is connected...
+GST_ARGUS: Available Sensor modes :
+GST_ARGUS: 4032 x 3040 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: 3840 x 2160 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: 1920 x 1080 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: Running with following settings:
+   Camera index = 0 
+   Camera mode  = 0 
+   Output Stream W = 4032 H = 3040 
+   seconds to Run    = 0 
+   Frame Rate = 21.000000 
+GST_ARGUS: Setup Complete, Starting captures for 0 seconds
+GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+Median Lab a=124  b=144  (delta=10%)
+[chrseg] avg 34.0 ms  (min 15.8, max 130.0) ? 29.4 fps
+[chrseg] avg 32.8 ms  (min 18.8, max 36.8) ? 30.5 fps
+[chrseg] avg 29.4 ms  (min 19.3, max 38.8) ? 34.0 fps
+[chrseg] avg 32.3 ms  (min 18.2, max 36.2) ? 31.0 fps
+[chrseg] avg 30.4 ms  (min 19.0, max 39.1) ? 32.9 fps
+
+[chrseg] FINAL  avg 32.7 ms  (min 19.5, max 61.3) ? 30.6 fps  (169 frames)
+GST_ARGUS: Cleaning up
+CONSUMER: Done Success
+GST_ARGUS: Done Success

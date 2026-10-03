@@ -1,0 +1,23 @@
+# Build output (everything, except the distributable firmware image)
+build/*
+!build/
+
+# Firmware images: keep the built .uf2 in the repo, ignore everything else
+*.uf2
+!build/*.uf2
+*.elf
+*.bin
+*.hex
+*.map
+
+# Generated PIO header
+*.pio.h
+
+# CMake (defensive, e.g. for out-of-tree builds)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# keep the SDK import script (root .gitignore ignores *.cmake)
+!pico_sdk_import.cmake

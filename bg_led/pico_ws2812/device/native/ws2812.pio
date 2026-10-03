@@ -1,0 +1,20 @@
+; WS2812 single-wire protocol, 8 cycles per bit (same timing as the
+; MicroPython asm_pio variant: T1=3, T2=3, T3=4).
+;
+; Drive the state machine at 8 MHz, sideset base on the data pin.
+
+.program ws2812
+.side_set 1
+
+.define public T1 3
+.define public T2 3
+.define public T3 4
+
+.wrap_target
+bitloop:
+    out x, 1       side 0 [T3 - 1]
+    jmp !x do_zero side 1 [T1 - 1]
+    jmp bitloop    side 1 [T2 - 1]
+do_zero:
+    nop            side 0 [T2 - 1]
+.wrap

@@ -1,0 +1,64 @@
+Pipeline string:
+nvarguscamerasrc sensor-id=0 exposuretimerange="2500000 2500000" awblock=true aelock=true tnr-mode=1 tnr-strength=0.1 ee-mode=0 saturation=1 ! video/x-raw(memory:NVMM),width=4032,height=3040,framerate=21/1,format=NV12 ! nvvidconv bl-output=false ! video/x-raw,format=NV12,width=1280,height=960,framerate=21/1 ! identity name=proc ! nvvidconv ! video/x-raw(memory:NVMM),width=1280,height=960 ! nvegltransform ! nveglglessink sync=false
+
+GST_ARGUS: NvArgusCameraSrc: Setting Exposure Time Range : 2500000 2500000
+Chromatic segmentation live preview (version 0.1.2)
+Display: 1280x960 (4:3)
+Processing: 1280x960 on GPU (CUDA + NPP)
+Sensor ID: 0
+Framerate: 21/1
+TNR mode: 1
+TNR strength: 0.1
+EE mode: 0
+Exposure time: 2500000 ns
+Delta: 10%
+Benchmarking enabled
+Debug mode enabled
+Press ENTER or close the window to stop.
+
+Using winsys: x11 
+GST_ARGUS: Creating output stream
+CONSUMER: Waiting until producer is connected...
+GST_ARGUS: Available Sensor modes :
+GST_ARGUS: 4032 x 3040 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: 3840 x 2160 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: 1920 x 1080 FR = 59.999999 fps Duration = 16666667 ; Analog Gain range min 1.000000, max 22.250000; Exposure Range min 13000, max 683709000;
+
+GST_ARGUS: Running with following settings:
+   Camera index = 0 
+   Camera mode  = 0 
+   Output Stream W = 4032 H = 3040 
+   seconds to Run    = 0 
+   Frame Rate = 21.000000 
+GST_ARGUS: Setup Complete, Starting captures for 0 seconds
+GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+Median BGR: B=106  G=151  R=164  (delta=10%)
+[chrseg] avg 6.2 ms  (min 3.7, max 66.2) ? 160.2 fps
+[chrseg] avg 3.9 ms  (min 3.7, max 4.0) ? 253.8 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.3) ? 250.5 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.1) ? 251.0 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.0) ? 251.0 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.0) ? 250.5 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.1) ? 251.0 fps
+[chrseg] avg 3.9 ms  (min 3.7, max 4.4) ? 255.8 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.1) ? 250.9 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.0) ? 250.7 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.1) ? 250.5 fps
+[chrseg] avg 4.0 ms  (min 3.7, max 4.2) ? 252.5 fps
+[chrseg] avg 3.9 ms  (min 3.7, max 4.2) ? 257.6 fps
+[chrseg] avg 4.0 ms  (min 3.8, max 4.2) ? 251.6 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.1) ? 250.3 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.1) ? 250.7 fps
+[chrseg] avg 4.0 ms  (min 4.0, max 4.1) ? 250.2 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.0) ? 250.6 fps
+[chrseg] avg 4.0 ms  (min 3.9, max 4.0) ? 251.0 fps
+[chrseg] avg 4.7 ms  (min 3.9, max 9.7) ? 211.5 fps
+[chrseg] avg 4.1 ms  (min 3.7, max 9.6) ? 243.0 fps
+
+[chrseg] FINAL  avg 3.9 ms  (min 3.6, max 4.0) ? 255.8 fps  (634 frames)
+GST_ARGUS: Cleaning up
+CONSUMER: Done Success
+GST_ARGUS: Done Success

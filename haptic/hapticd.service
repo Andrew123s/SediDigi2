@@ -1,0 +1,30 @@
+# hapticd.service - systemd unit file for the hapticd Daemon
+#
+# Installation:
+#   Target directory:  /etc/systemd/system/hapticd.service
+#   Permissions:       chmod 644 hapticd.service
+#   Owner:             root:root
+#
+# Enable and start:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable hapticd
+#   sudo systemctl start hapticd
+#
+# Check status:
+#   sudo systemctl status hapticd
+#   journalctl -u hapticd -f
+
+[Unit]
+Description=Haptic Feedback Daemon (TM6605)
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/hapticd/hapticd.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
