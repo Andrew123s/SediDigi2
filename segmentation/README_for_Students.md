@@ -92,6 +92,9 @@ BTK2 videos.
 | `-d, --delta` | Tolerance per LAB channel, in % (default 10) | Objects missed → **raise** it; too much noise → **lower** it |
 | `-a, --min_area` | Minimum object area in pixels (default 5000) | Your objects are smaller than the default (e.g. mites) → **lower it** |
 | `-H, --max_h` | Maximum object height in pixels (default 1000) | Long structures span the whole frame → lower it |
+| `-W, --max_w` | Maximum object width in pixels (default 1000) | Wide structures span the frame → lower it |
+| `--max_aspect` | Maximum elongation, long side / short side (default 0 = off) | Thin edge strips or fibres are saved as objects → set it, e.g. `--max_aspect 6` |
+| `--label` | Label drawn in the annotated video (default `Oribatida`) | Other organisms, e.g. `--label Collembola` |
 | `--bg_frames` | Frames collected for `temporal` (default 15) | More → more robust but needs more memory |
 | `-n, --num_samples` | Crops saved per track (default 10) | Save more/less per specimen |
 | `-D, --drawing` | Also writes an annotated video (`__annot.mp4`) | When you want a visual check of detection + tracking |
@@ -165,6 +168,16 @@ fast objects tracked.
 python bg_segmentation_v0_1.py -i BTK2_12__Ori_23_N__Funsoil__bg1__01.mov -b temporal --bg_frames 15 -d 10 -a 1500 -D
 ```
 
+**6. Tested settings for all project videos (BTK1 and BTK2)**
+
+```bash
+python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d 10 -a 1500 --max_aspect 6 -D
+```
+
+Same as example 5, plus `--max_aspect 6`, which drops thin cuvette-edge strips
+and fibres. For the springtail video (BTK1) add `--label Collembola`. Example
+results for all four videos are in the `results/` folder of the repository.
+
 ---
 
 ## Common mistakes
@@ -195,6 +208,18 @@ SORT breaks the track when an association is too weak. Very fast objects, or a
 low frame rate, are typical causes. Try `-l` (halve the effective fps) or
 record at a higher frame rate. Note that every track also needs ≥3 consecutive
 detections before it is kept at all.
+
+**Thin strips along the cuvette edge or fibres are saved as objects.**
+
+If the camera or cuvette shifts slightly, its edges differ from the background
+model and show up as long, thin detections. Add `--max_aspect 6`: real
+specimens are much less elongated than these strips.
+
+**Two or more specimens end up in one crop.**
+
+Specimens that touch form a single blob in the mask and are saved as one
+object. This is a limit of the method, not a setting; sort these crops out
+by hand.
 
 **The script eats a lot of memory.**
 

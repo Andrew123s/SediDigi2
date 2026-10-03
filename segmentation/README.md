@@ -74,6 +74,9 @@ python chromatic_segmentation_07072026.py -i <video filename>
 | `-i, --input` | Video file path | required |
 | `-a, --min_area` | Minimum object area (px) | 5000 |
 | `-H, --max_h` | Maximum object height (px) | 1000 |
+| `-W, --max_w` | Maximum object width (px) | 1000 |
+| `--max_aspect` | Maximum elongation (long side / short side); `0` = off | 0 |
+| `--label` | Label drawn next to each box in the annotated video | Oribatida |
 | `-r, --resize` | Scale factor | 0.25 |
 | `-n, --num_samples` | Images per object | 10 |
 | `-d, --delta` | Deviation from background (%), per-channel LAB tolerance | 10 |
@@ -81,6 +84,20 @@ python chromatic_segmentation_07072026.py -i <video filename>
 | `--bg_frames` | Frames collected for the `temporal` background model | 15 |
 | `-D, --drawing` | Generate annotated video | off |
 | `-c, --clahe` | Apply CLAHE | off |
+
+### Tested settings
+
+Tested on the four project videos (BTK1_20, BTK2_12, BTK2_16, BTK2_26):
+
+```bash
+python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d 10 -a 1500 --max_aspect 6 -D
+```
+
+Specimens measure roughly 70–250 px across in these 4K recordings, so the
+default `-a 5000` misses many of them. Real specimens never exceeded an
+elongation of about 4.3, while cuvette-edge strips and fibres reached 7–16, so
+`--max_aspect 6` removes those artefacts. Results and visualisations are in
+[`../results/`](../results/).
 
 ## Troubleshooting
 

@@ -237,8 +237,10 @@ def extract_obj(args):
 
             x, y, w, h, area = stats[obj]
 
-            # Filter on min size, max height, and remove if close to top and bottom edge.
-            if (area > min_area) and (h < max_h) and (y > 20) and ((y+h) < (theight-20)):
+            # Filter on min size, max height/width, elongation, and remove if close to top and bottom edge.
+            aspect = max(w, h) / max(min(w, h), 1)
+            if (area > min_area) and (h < max_h) and (w < max_w) and (y > 20) and ((y+h) < (theight-20)) \
+                    and (args.max_aspect <= 0 or aspect <= args.max_aspect):
 
                 detections.append([x,y, x+w, y+h, None])            # saving the detection bbox for tracking
                 mask_obj = (labels == obj).astype(np.uint8) * 255   # frame-wide mask of the object
@@ -277,7 +279,7 @@ def extract_obj(args):
                 # Draw scaled bbox and cosmetic label
                 rdet = [round(e * resize_factor) for e in detections[i][:4]]
                 cv2.rectangle(img_d, (rdet[0],rdet[1]), (rdet[2],rdet[3]), color, round(5*resize_factor))
-                cv2.putText(img_d, f"Oribatida", (rdet[0], rdet[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 2*resize_factor, color, int(6*resize_factor))
+                cv2.putText(img_d, args.label, (rdet[0], rdet[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 2*resize_factor, color, int(6*resize_factor))
 
                 # Make border of the mask and draw on the mask layer
                 dilated = cv2.dilate(mask_objs[i], None, iterations=1)
@@ -379,6 +381,8 @@ def main():
     parser.add_argument("-l", "--low_fps", action='store_true', help="""Halving framerate""")
     parser.add_argument("-T", "--threads", default=8, type=int, help="""Number of threads of opencv""")
     parser.add_argument("-c", "--clahe", action='store_true', help="""Apply CLAHE""")
+    parser.add_argument("--max_aspect", default=0, type=float, help="""Maximum elongation (long side / short side) of an object, e.g. 6 to drop thin edge strips and fibres (default 0 = off)""")
+    parser.add_argument("--label", default="Oribatida", type=str, help="""Label drawn next to each box in the annotated video (default Oribatida)""")
 
     args = parser.parse_args()
     cv2.setNumThreads(args.threads)
