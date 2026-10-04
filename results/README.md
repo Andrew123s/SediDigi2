@@ -1,6 +1,6 @@
 # SediDigi/results
 
-Segmentation results and visualisations for the project videos. Each run lives in
+Segmentation results for the project videos. Each run lives in
 its own dated folder; the raw videos themselves are kept on Google Drive (too large
 for GitHub).
 
@@ -17,23 +17,11 @@ for GitHub).
 
 ```
 results/
-├── make_visualizations.py                 # builds the visualizations/ folder of a run
 └── <date>_<script>/
     ├── <video>/base/                      # original object crops
     ├── <video>/pmask/                     # crops with the background replaced by magenta
     ├── <video>/cpmask/                    # same content as pmask/
-    ├── <video>__annot.mp4                 # annotated video (boxes, track IDs, mask outlines)
-    └── visualizations/
-        ├── <video>__contact_sheet.jpg     # one tile per track ID: "ID  WxH" (middle crop)
-        ├── <video>__annot_frames.jpg      # four frames from the annotated video
-        ├── <video>__tracks.csv            # per track: crops, first/last frame, median size
-        └── summary.csv                    # one line per video
-```
-
-Rebuild the visualisations of a run with:
-
-```bash
-python results/make_visualizations.py results/<run folder>
+    └── <video>__annot.mp4                 # annotated video (boxes, track IDs, mask outlines)
 ```
 
 ## 2026-10-03 — `bg_segmentation_v0_1.py`
@@ -61,7 +49,7 @@ Run times were measured on a Windows laptop with CPU decoding, before multi-thre
 decoding was enabled (see [the use-case report](2026-10-03_readme_use_cases_BTK2_26/README.md#decoding-speed));
 current versions of the scripts are faster.
 
-### Observations (visual check of the contact sheets)
+### Observations (visual check of the crops)
 
 - **BTK2_26** — clean: every track is a whole mite; one crop holds two touching mites.
 - **BTK2_12** — very good: almost all tracks are single mites. A few tracks are

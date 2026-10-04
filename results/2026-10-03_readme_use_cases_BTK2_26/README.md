@@ -19,7 +19,7 @@ all whole mites, one crop with two touching mites.
 
 \* after enabling multi-threaded decoding, see below.
 
-## Observations (visual check of the contact sheets)
+## Observations (visual check of the crops)
 
 - **Use case 1 (defaults)** — works out of the box on this video: the same 38 mites
   as the tuned run. The mites in BTK2_26 are large (about 200×200 px), so the

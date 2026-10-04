@@ -36,7 +36,7 @@ small differences are not meaningful; the BTK2_12 difference is.
 
 **BTK2_12 — clear difference.** The tracks were classified by the colour of the
 object pixels (the mites are red-brown, the background is blue-grey) and checked
-against the contact sheets:
+visually against the crops:
 
 | | Mite tracks | Background tracks |
 |---|---|---|
@@ -45,7 +45,7 @@ against the contact sheets:
 
 The lighter patches of the background differ from the single median colour by more
 than `delta`, so the chromatic script marks them as foreground in every frame
-(visible as large outlined shapes in `__annot_frames.jpg`). About 20 of these static
+(visible as large outlined shapes in the annotated video `__annot.mp4`). About 20 of these static
 blobs are present per frame and are re-tracked under new IDs again and again. Mites
 crossing them merge with the blob and lose their track, which is why the chromatic
 run also has more (fragmented) mite tracks. The many large blobs also make it about

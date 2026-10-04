@@ -105,7 +105,7 @@ python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d
 Specimens measure roughly 70–250 px across in these 4K recordings, so the
 default `-a 5000` misses many of them. Real specimens never exceeded an
 elongation of about 4.3, while cuvette-edge strips and fibres reached 7–16, so
-`--max_aspect 6` removes those artefacts. Results and visualisations are in
+`--max_aspect 6` removes those artefacts. Results are in
 [`../results/`](../results/).
 
 ## Troubleshooting
