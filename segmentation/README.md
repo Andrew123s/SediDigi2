@@ -96,7 +96,7 @@ python chromatic_segmentation_07072026.py -i <video filename>
 
 ### Tested settings
 
-Tested on the four project videos (BTK1_20, BTK2_12, BTK2_16, BTK2_26):
+Tested on the six project videos (BTK1_20, BTK1_55, BTK2_12, BTK2_16, BTK2_26, BTKM3_1):
 
 ```bash
 python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d 10 -a 1500 --max_aspect 6 -D
@@ -106,7 +106,7 @@ Specimens measure roughly 70–250 px across in these 4K recordings, so the
 default `-a 5000` misses many of them. Real specimens never exceeded an
 elongation of about 4.3, while cuvette-edge strips and fibres reached 7–16, so
 `--max_aspect 6` removes those artefacts. Results are in
-[`../results/`](../results/).
+[`../Andrew_results/`](../Andrew_results/).
 
 ## Troubleshooting
 

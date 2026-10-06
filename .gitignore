@@ -72,4 +72,4 @@ Thumbs.db
 *.mkv
 *.mov
 *.mp4
-!results/**/*.mp4
+!Andrew_results/**/*.mp4

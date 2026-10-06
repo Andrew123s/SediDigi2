@@ -176,7 +176,7 @@ python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d
 
 Same as example 5, plus `--max_aspect 6`, which drops thin cuvette-edge strips
 and fibres. For the springtail video (BTK1) add `--label Collembola`. Example
-results for all four videos are in the `results/` folder of the repository.
+results for all six videos are in the `Andrew_results/` folder of the repository.
 
 ---
 
