@@ -86,6 +86,11 @@ python chromatic_segmentation_07072026.py -i <video filename>
 | `-W, --max_w` | Maximum object width (px) | 1000 |
 | `--max_aspect` | Maximum elongation (long side / short side); `0` = off | 0 |
 | `--label` | Label drawn next to each box in the annotated video | Oribatida |
+| `--select` | Crops saved per track: `best` skips detections merged with another object (area far from the track's median) and keeps the sharpest crop of each of `-n` time segments; `even` keeps evenly spaced crops (previous behaviour) | best |
+| `--split` | Split components that contain several touching objects (recommended for mites, not for springtails) | off |
+| `--split_core` | Core threshold for `--split`, fraction of the largest distance to the background | 0.5 |
+| `--close` | Kernel size of the closing that reconnects appendages (it can also fuse close objects); `0` = off | 5 |
+| `--pad` | Margin around each crop, fraction of the object's longer side | 0 |
 | `-r, --resize` | Scale factor | 0.25 |
 | `-n, --num_samples` | Images per object | 10 |
 | `-d, --delta` | Deviation from background (%), per-channel LAB tolerance | 10 |
@@ -105,8 +110,13 @@ python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d
 Specimens measure roughly 70–250 px across in these 4K recordings, so the
 default `-a 5000` misses many of them. Real specimens never exceeded an
 elongation of about 4.3, while cuvette-edge strips and fibres reached 7–16, so
-`--max_aspect 6` removes those artefacts. Results are in
-[`../Andrew_results/`](../Andrew_results/).
+`--max_aspect 6` removes those artefacts.
+
+For mite videos add `--split`: on BTK2_16 it reduced crops containing several
+touching mites from 9.8 % to 6.6 % without cutting single mites apart. Do not use it
+for springtails: their narrow neck can be mistaken for the gap between two objects
+(on BTK1_20 the number of tracks rose from 59 to 66). Specimens lying on top of each
+other cannot be separated. Results are in [`../Andrew_results/`](../Andrew_results/).
 
 ## Troubleshooting
 

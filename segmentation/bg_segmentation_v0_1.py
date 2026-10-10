@@ -66,6 +66,59 @@ def match_tracks_to_detections(tracks, detections, min_iou=0.3):
     return [(r, c) for r, c in zip(rows, cols) if iou[r, c] >= min_iou]
 
 
+def split_component(comp, core_frac):
+    """
+    Split a binary component (uint8, 0/1) that contains several touching objects.
+
+    Object cores are the parts of the component whose distance to the background is
+    at least core_frac of the maximum distance. Each pixel is assigned to its nearest
+    core. Returns one binary mask per object (a single mask if there is one core).
+    """
+    dist = cv2.distanceTransform(comp, cv2.DIST_L2, 5)
+    cores = (dist >= core_frac * dist.max()).astype(np.uint8)
+    n_cores, _ = cv2.connectedComponents(cores)
+    if n_cores <= 2:   # background + one core
+        return [comp]
+
+    # Nearest-core assignment: every pixel gets the label of the closest core
+    _, nearest = cv2.distanceTransformWithLabels(1 - cores, cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_CCOMP)
+    parts = [((nearest == lab) & (comp > 0)).astype(np.uint8) for lab in np.unique(nearest[cores > 0])]
+    parts = [p for p in parts if p.any()]
+
+    # Touching objects give parts of similar size; a narrow waist inside one object
+    # (e.g. the head of a springtail) gives one small part. Only split in the first case.
+    total = comp.sum()
+    if min(p.sum() for p in parts) < 0.25 * total:
+        return [comp]
+    return parts
+
+
+def select_samples(entries, n, mode):
+    """
+    Pick the crops to save for one track (entries are in frame order).
+
+    'even' keeps every k-th detection (previous behaviour). 'best' first drops
+    detections whose area differs strongly from the track's median area (merged
+    with another object, or only partly detected), then splits the remaining
+    detections into n consecutive segments and keeps the sharpest one of each.
+    """
+    if mode == 'even':
+        step = max(len(entries) // n, 1)
+        return entries[::step]
+
+    if len(entries) <= n:
+        return entries
+
+    med = np.median([e['area'] for e in entries])
+    pool = [e for e in entries if 0.7 * med <= e['area'] <= 1.3 * med]
+    if len(pool) < n:   # not enough typical detections: take the n closest to the median size
+        closest = sorted(range(len(entries)), key=lambda j: abs(entries[j]['area'] - med))[:n]
+        pool = [entries[j] for j in sorted(closest)]
+
+    return [max((pool[j] for j in seg), key=lambda e: e['sharpness'])
+            for seg in np.array_split(np.arange(len(pool)), n) if len(seg)]
+
+
 def extract_obj(args):
     """
     Process a video and extract moving objects from a static background.
@@ -124,7 +177,8 @@ def extract_obj(args):
 
     print(f'Running mask detection based on invert background color selection (bg model: {args.bg_model})')
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (args.close, args.close)) if args.close > 1 else None
+    n_split = 0   # number of components split into several objects (--split)
 
     mot_tracker = Sort()
     tracked_objects = dict()
@@ -206,9 +260,10 @@ def extract_obj(args):
         fgmask = cv2.bitwise_not(mask)
 
         # Recovering lost parts (appendages) - but unfortunately may also fuse close objects.
-        # Gut feeling = untested.
-        fgmask = cv2.dilate(fgmask, kernel, iterations=1)
-        fgmask = cv2.erode(fgmask, kernel, iterations=1)
+        # Kernel size set with --close (default 5, 0 = off).
+        if kernel is not None:
+            fgmask = cv2.dilate(fgmask, kernel, iterations=1)
+            fgmask = cv2.erode(fgmask, kernel, iterations=1)
 
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(fgmask) # Get instances from fgmask
 
@@ -219,29 +274,55 @@ def extract_obj(args):
         obj_id = list()      # to keep object_id (tracking)
         masked_crop = list() # to keep object crops (img with masked background)
         mask_objs = list()   # to keep the resized full img object masks if drawing
-        # Loop into the found segments.
+        areas = list()       # to keep object areas (crop selection)
+        sharpness = list()   # to keep object sharpness (crop selection)
 
+        def passes_filters(x, y, w, h, area):
+            # Filter on min size, max height/width, elongation, and remove if close to top and bottom edge.
+            aspect = max(w, h) / max(min(w, h), 1)
+            return (area > min_area) and (h < max_h) and (w < max_w) and (y > 20) and ((y+h) < (theight-20)) \
+                and (args.max_aspect <= 0 or aspect <= args.max_aspect)
+
+        # Loop into the found segments.
         for obj in range(1, num_labels):
 
             x, y, w, h, area = stats[obj]
+            if not passes_filters(x, y, w, h, area):
+                continue
 
-            # Filter on min size, max height/width, elongation, and remove if close to top and bottom edge.
-            aspect = max(w, h) / max(min(w, h), 1)
-            if (area > min_area) and (h < max_h) and (w < max_w) and (y > 20) and ((y+h) < (theight-20)) \
-                    and (args.max_aspect <= 0 or aspect <= args.max_aspect):
+            comp = (labels[y:y+h, x:x+w] == obj).astype(np.uint8)
+            parts = split_component(comp, args.split_core) if args.split else [comp]
+            n_split += len(parts) > 1
 
-                detections.append([x,y, x+w, y+h, None])            # saving the detection bbox for tracking
-                mask_obj = (labels == obj).astype(np.uint8) * 255   # frame-wide mask of the object
-                names.append(f"f{frame_id:05d}__x{x}__y{y}")        # naming the object by frame and location
+            for part in parts:
+                px, py, w, h = cv2.boundingRect(part)
+                x0, y0 = x + px, y + py
+                part_area = cv2.countNonZero(part)
+                if len(parts) > 1 and not passes_filters(x0, y0, w, h, part_area):
+                    continue
+
+                detections.append([x0, y0, x0+w, y0+h, None])        # saving the detection bbox for tracking
+                names.append(f"f{frame_id:05d}__x{x0}__y{y0}")       # naming the object by frame and location
+                areas.append(part_area)
+
+                # Crop box, optionally enlarged by a margin (--pad) and clipped to the frame
+                pad = round(args.pad * max(w, h))
+                cx0, cy0 = max(x0 - pad, 0), max(y0 - pad, 0)
+                cx1, cy1 = min(x0 + w + pad, twidth), min(y0 + h + pad, theight)
+                mask_crop = np.zeros((cy1 - cy0, cx1 - cx0), np.uint8)
+                mask_crop[y0-cy0:y0-cy0+h, x0-cx0:x0-cx0+w] = part[py:py+h, px:px+w] * 255
 
                 # Collecting the object crops and mask crops, kept in memory until the end
                 # of the video. Tracking runs online per frame; a representative subset
                 # (up to `n` samples) per tracked object is written once the video ends.
 
-                img_crop = img[y:y+h, x:x+w]
-                mask_crop = mask_obj[y:y+h, x:x+w]
-                masks.append(mask_crop.copy())
+                img_crop = img[cy0:cy1, cx0:cx1]
+                masks.append(mask_crop)
                 crops.append(img_crop.copy())
+
+                # Sharpness of the object pixels (variance of the Laplacian)
+                lap = cv2.Laplacian(cv2.cvtColor(img_crop, cv2.COLOR_BGR2GRAY), cv2.CV_64F)
+                sharpness.append(float(lap[mask_crop > 0].var()))
 
                 # Masking the background of the object crop
                 bgc = np.array([210, 100, 150], dtype=np.uint8)
@@ -250,6 +331,8 @@ def extract_obj(args):
                 masked_crop.append(mcrops)
 
                 if args.drawing:
+                    mask_obj = np.zeros((theight, twidth), np.uint8)   # frame-wide mask of the object
+                    mask_obj[y0:y0+h, x0:x0+w] = part[py:py+h, px:px+w] * 255
                     mask_objs.append(
                         cv2.resize(mask_obj, (width, height), interpolation=cv2.INTER_AREA)
                         )
@@ -283,10 +366,9 @@ def extract_obj(args):
             for t, i in match_tracks_to_detections(track_bbs_ids, detections):
                 detect = track_bbs_ids[t]
                 obj_id = int(detect[4])
-                if obj_id in tracked_objects:
-                    tracked_objects[obj_id].append({'crop': crops[i], 'mask': masks[i], 'masked_crop' : masked_crop[i], 'name': names[i]})
-                else:
-                    tracked_objects[obj_id] = [{'crop': crops[i], 'mask': masks[i], 'masked_crop' : masked_crop[i], 'name': names[i]}]
+                tracked_objects.setdefault(obj_id, []).append(
+                    {'crop': crops[i], 'mask': masks[i], 'masked_crop': masked_crop[i], 'name': names[i],
+                     'area': areas[i], 'sharpness': sharpness[i]})
 
                 # Drawing the tracked object id
                 if args.drawing:
@@ -312,6 +394,8 @@ def extract_obj(args):
         out_cont.mux(o_stream.encode())  # flush frames still buffered in the encoder
         out_cont.close()
 
+    if args.split:
+        print(f"Split {n_split} components into several objects")
     print("Writing crop")
 
     # Parallelizing crop writing
@@ -321,12 +405,8 @@ def extract_obj(args):
         cv2.imwrite(path, img)
 
     for obj_id in tracked_objects:
-        # A representative subset (up to `n` crops) is saved per tracked object.
-        step = len(tracked_objects[obj_id]) // n
-        if step == 0:
-            step = 1
-
-        for obj in tracked_objects[obj_id][::step]:
+        # A representative subset of crops is saved per tracked object (see --select).
+        for obj in select_samples(tracked_objects[obj_id], n, args.select):
             base = f"{out}/base/{Path(out).stem}__obj{obj_id}__{obj['name']}"
             pmask = f"{out}/pmask/{Path(out).stem}__obj{obj_id}__{obj['name']}"
             cpmask = f"{out}/cpmask/{Path(out).stem}__obj{obj_id}__{obj['name']}"
@@ -354,6 +434,11 @@ def main():
     parser.add_argument("-c", "--clahe", action='store_true', help="""Apply CLAHE""")
     parser.add_argument("--max_aspect", default=0, type=float, help="""Maximum elongation (long side / short side) of an object, e.g. 6 to drop thin edge strips and fibres (default 0 = off)""")
     parser.add_argument("--label", default="Oribatida", type=str, help="""Label drawn next to each box in the annotated video (default Oribatida)""")
+    parser.add_argument("--select", default="best", choices=["best", "even"], help="""Crops saved per track: 'best' (default) skips detections merged with another object and keeps the sharpest crop of each time segment, 'even' keeps evenly spaced crops (previous behaviour)""")
+    parser.add_argument("--split", action='store_true', help="""Split components that contain several touching objects""")
+    parser.add_argument("--split_core", default=0.5, type=float, help="""Core threshold for --split, as a fraction of the largest distance to the background (default 0.5, lower = fewer splits)""")
+    parser.add_argument("--close", default=5, type=int, help="""Kernel size of the closing that reconnects appendages; it can also fuse close objects (default 5, 0 = off)""")
+    parser.add_argument("--pad", default=0, type=float, help="""Margin around each crop, as a fraction of the object's longer side (default 0)""")
     parser.add_argument("-b", "--bg_model", default='median', choices=['median', 'frame', 'temporal'], help="""Background model: 'median' (scalar median color, default), 'frame' (first frame image), 'temporal' (per-pixel median over --bg_frames)""")
     parser.add_argument("--bg_frames", default=15, type=int, help="""Frames to collect for 'temporal' background model (default 15, watch memory usage)""")
 

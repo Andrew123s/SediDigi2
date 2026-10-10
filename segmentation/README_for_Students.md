@@ -95,6 +95,8 @@ BTK2 videos.
 | `-W, --max_w` | Maximum object width in pixels (default 1000) | Wide structures span the frame → lower it |
 | `--max_aspect` | Maximum elongation, long side / short side (default 0 = off) | Thin edge strips or fibres are saved as objects → set it, e.g. `--max_aspect 6` |
 | `--label` | Label drawn in the annotated video (default `Oribatida`) | Other organisms, e.g. `--label Collembola` |
+| `--split` | Splits blobs of touching objects into single objects (default off) | Mites touching each other end up in one crop → set it; not for springtails |
+| `--select` | Which crops are saved per track: `best` (default) skips merged moments and keeps the sharpest crops, `even` keeps evenly spaced crops | Normally keep `best` |
 | `--bg_frames` | Frames collected for `temporal` (default 15) | More → more robust but needs more memory |
 | `-n, --num_samples` | Crops saved per track (default 10) | Save more/less per specimen |
 | `-D, --drawing` | Also writes an annotated video (`__annot.mp4`) | When you want a visual check of detection + tracking |
@@ -175,8 +177,9 @@ python bg_segmentation_v0_1.py -i <video filename> -b temporal --bg_frames 15 -d
 ```
 
 Same as example 5, plus `--max_aspect 6`, which drops thin cuvette-edge strips
-and fibres. For the springtail video (BTK1) add `--label Collembola`. Example
-results for all six videos are in the `Andrew_results/` folder of the repository.
+and fibres. For the mite videos (BTK2) add `--split`; for the springtail videos
+(BTK1) add `--label Collembola` instead. Example results for all six videos are in
+the `Andrew_results/` folder of the repository.
 
 ---
 
@@ -218,8 +221,9 @@ specimens are much less elongated than these strips.
 **Two or more specimens end up in one crop.**
 
 Specimens that touch form a single blob in the mask and are saved as one
-object. This is a limit of the method, not a setting; sort these crops out
-by hand.
+object. For mites, add `--split`: it separates blobs that consist of several
+round bodies. It does not work for springtails (it cuts them at the neck) or
+for specimens lying on top of each other; sort those crops out by hand.
 
 **The script eats a lot of memory.**
 
